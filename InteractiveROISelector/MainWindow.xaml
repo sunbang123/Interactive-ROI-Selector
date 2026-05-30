@@ -6,7 +6,11 @@
         xmlns:local="clr-namespace:InteractiveROISelector"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
+    <Grid ClipToBounds="True">
+        <Canvas>
+            <Image Stretch="Fill" RenderTransformOrigin="0,0"/>
+        </Canvas>
+        <Frame Content="Frame"/>
 
     </Grid>
 </Window>
