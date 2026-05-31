@@ -23,6 +23,11 @@ namespace InteractiveROISelector
         TranslateTransform panTransform = new TranslateTransform();
         ScaleTransform zoomTransform = new ScaleTransform();
 
+        bool isDrawing = false;
+        Point roiStartPoint;
+        Rectangle currentROI = new Rectangle();
+        List<Rectangle> roiList = new List<Rectangle>();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -35,7 +40,7 @@ namespace InteractiveROISelector
             ROICanvas.RenderTransform = group;
         }
 
-        private void Canvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void Canvas_PanningDown(object sender, MouseButtonEventArgs e)
         {
             // Start panning
             isPanning = true;
@@ -43,7 +48,7 @@ namespace InteractiveROISelector
             this.Cursor = Cursors.Hand;
         }
 
-        private void Canvas_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void Canvas_PanningUp(object sender, MouseButtonEventArgs e)
         {
             // Stop panning
             isPanning = false;
@@ -59,6 +64,27 @@ namespace InteractiveROISelector
                 panTransform.X += delta.X;
                 panTransform.Y += delta.Y;
                 panStartPoint = currentPoint;
+            }
+
+            // ROI 사각형을 그리는 중일 때
+            if (isDrawing && currentROI != null)
+            {
+                Point currentPoint = e.GetPosition(ROICanvas);
+
+                // [핵심 보정] 역방향 드래그 예외 처리
+                // 가로/세로 길이는 무조건 절대값(Abs)으로 양수만 나오게 처리
+                double width = Math.Abs(currentPoint.X - roiStartPoint.X);
+                double height = Math.Abs(currentPoint.Y - roiStartPoint.Y);
+
+                // 사각형이 시작되는 좌측 상단 꼭지점은 두 점 중 더 작은 값(Min)으로 지정
+                double left = Math.Min(currentPoint.X, roiStartPoint.X);
+                double top = Math.Min(currentPoint.Y, roiStartPoint.Y);
+
+                // 계산된 크기와 위치를 현재 사각형에 실시간 적용
+                currentROI.Width = width;
+                currentROI.Height = height;
+                Canvas.SetLeft(currentROI, left);
+                Canvas.SetTop(currentROI, top);
             }
         }
 
@@ -77,15 +103,63 @@ namespace InteractiveROISelector
             zoomTransform.ScaleY = newScale;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private void Button_ImgOpen(object sender, RoutedEventArgs e)
         {
             // 사진열기
             Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog();
-            openFileDialog.Filter = "Image files (*.jpg, *.jpeg, *.png) | *.jpg; *.jpeg; *.png";
+            openFileDialog.Filter = "Image files (*.jpg, *.jpeg, *.png; *.tif) | *.jpg; *.jpeg; *.png; *.tif; *.tiff ";
             if (openFileDialog.ShowDialog() == true)
             {
                 BitmapImage bitmap = new BitmapImage(new Uri(openFileDialog.FileName));
                 MainImage.Source = bitmap;
+
+                // ROI 사각형 초기화 (도화지에서 지우고 메모리 비우기)
+                // 1. 도화지에서 리스트에 있는 모든 사각형을 찾아 제거
+                foreach (Rectangle roi in roiList)
+                {
+                    ROICanvas.Children.Remove(roi);
+                }
+
+                // 2. 리스트 자체도 깨끗하게 비우기
+                roiList.Clear();
+                currentROI = null;
+
+                // 상태 스위치 초기화
+                isDrawing = false;
+                isPanning = false;
+
+                // 카메라(줌/팬) 원위치로 초기화 (1배율, X/Y 0)
+                panTransform.X = 0;
+                panTransform.Y = 0;
+                zoomTransform.ScaleX = 1;
+                zoomTransform.ScaleY = 1;
+            }
+        }
+
+        private void Canvas_RoiDown(object sender, MouseButtonEventArgs e)
+        {
+            // Start drawing ROI
+            isDrawing = true;
+            roiStartPoint = e.GetPosition(ROICanvas);
+            currentROI = new Rectangle
+            {
+                Stroke = Brushes.Red,
+                StrokeThickness = 2,
+                Fill = new SolidColorBrush(Color.FromArgb(50, 255, 0, 0))
+            };
+            Canvas.SetLeft(currentROI, roiStartPoint.X);
+            Canvas.SetTop(currentROI, roiStartPoint.Y);
+            ROICanvas.Children.Add(currentROI);
+        }
+
+        private void Canvas_RoiUp(object sender, MouseButtonEventArgs e)
+        {
+            if (isDrawing)
+            {
+                // Finish drawing ROI
+                isDrawing = false;
+
+                roiList.Add(currentROI);
             }
         }
     }

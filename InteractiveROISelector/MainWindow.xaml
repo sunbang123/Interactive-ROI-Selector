@@ -7,9 +7,9 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid x:Name="ROIGrid" ClipToBounds="True" Background="#FF222222">
-        <Canvas x:Name="ROICanvas" Background="Transparent" MouseLeftButtonDown="Canvas_MouseLeftButtonDown" MouseLeftButtonUp="Canvas_MouseLeftButtonUp" MouseMove="Canvas_MouseMove" MouseWheel="Canvas_MouseWheel">
+        <Canvas x:Name="ROICanvas" Background="Transparent" MouseMove="Canvas_MouseMove" MouseWheel="Canvas_MouseWheel" MouseRightButtonDown="Canvas_PanningDown" MouseRightButtonUp="Canvas_PanningUp" MouseLeftButtonDown="Canvas_RoiDown" MouseLeftButtonUp="Canvas_RoiUp">
             <Image x:Name="MainImage" Stretch="Uniform" RenderTransformOrigin="0,0"/>
         </Canvas>
-        <Button Content="사진 열기" HorizontalAlignment="Left" Margin="698,332,0,0" VerticalAlignment="Top" Height="75" Width="75" Click="Button_Click"/>
+        <Button Content="사진 열기" HorizontalAlignment="Left" Margin="698,332,0,0" VerticalAlignment="Top" Height="75" Width="75" Click="Button_ImgOpen"/>
     </Grid>
 </Window>
