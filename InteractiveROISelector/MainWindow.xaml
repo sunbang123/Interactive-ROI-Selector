@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:InteractiveROISelector"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800" KeyDown="Window_KeyDown">    
     <Grid x:Name="ROIGrid" ClipToBounds="True" Background="#FF222222">
         <Canvas x:Name="ROICanvas" Background="Transparent" MouseMove="Canvas_MouseMove" MouseWheel="Canvas_MouseWheel" MouseRightButtonDown="Canvas_PanningDown" MouseRightButtonUp="Canvas_PanningUp" MouseLeftButtonDown="Canvas_RoiDown" MouseLeftButtonUp="Canvas_RoiUp">
             <Image x:Name="MainImage" Stretch="Uniform" RenderTransformOrigin="0,0"/>

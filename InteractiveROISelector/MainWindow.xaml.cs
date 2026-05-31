@@ -154,12 +154,64 @@ namespace InteractiveROISelector
 
         private void Canvas_RoiUp(object sender, MouseButtonEventArgs e)
         {
-            if (isDrawing)
+            if (isDrawing && currentROI != null)
             {
-                // Finish drawing ROI
-                isDrawing = false;
+                // Ctrl 키가 눌려있는지 확인 (키보드 상태 감지)
+                if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+                {
+                    if (currentROI.Width < 10 || currentROI.Height < 10) return; // 너무 작으면 무시
 
-                roiList.Add(currentROI);
+                    // 완벽한 돋보기 배율(Scale) 찾기 (0.9는 여백 10% 확보)
+                    double scaleX = ROIGrid.ActualWidth / currentROI.Width;
+                    double scaleY = ROIGrid.ActualHeight / currentROI.Height;
+                    double targetScale = Math.Min(scaleX, scaleY) * 0.9;
+
+                    // 사각형의 정중앙 좌표 찾기
+                    double roiCenterX = Canvas.GetLeft(currentROI) + (currentROI.Width / 2);
+                    double roiCenterY = Canvas.GetTop(currentROI) + (currentROI.Height / 2);
+
+                    // 밀대(Pan)와 돋보기(Zoom) 이동
+                    panTransform.X = (ROIGrid.ActualWidth / 2) - (roiCenterX * targetScale);
+                    panTransform.Y = (ROIGrid.ActualHeight / 2) - (roiCenterY * targetScale);
+                    zoomTransform.ScaleX = targetScale;
+                    zoomTransform.ScaleY = targetScale;
+
+                    // 줌 기능으로 썼으니 ROI 박스는 캔버스에서 깔끔하게 지워줌
+                    ROICanvas.Children.Remove(currentROI);
+                }
+                else
+                {
+                    // ==========================================
+                    // [A타입] 일반 ROI 지정 모드
+                    // ==========================================
+                    roiList.Add(currentROI); // 리스트에 기록
+                }
+
+                // 다음 그리기를 위해 현재 변수 비우기
+                currentROI = null;
+            }
+        }
+
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            // 1. Ctrl 키와 Z 키가 동시에 눌렸는지 확인
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && e.Key == Key.Z)
+            {
+                // 2. 리스트에 지울 ROI 사각형이 하나라도 남아있는지 확인
+                if (roiList.Count > 0)
+                {
+                    // 3. 리스트의 가장 마지막 번호(인덱스) 구하기
+                    int lastIndex = roiList.Count - 1;
+
+                    // 4. 장부에서 마지막 사각형 객체 가져오기
+                    Rectangle lastROI = roiList[lastIndex];
+
+                    // 5. 캔버스에서 눈에 보이는 ROI 사각형 지우기
+                    ROICanvas.Children.Remove(lastROI);
+
+                    // 6. 리스트에서도 완전히 기록 삭제하기
+                    roiList.RemoveAt(lastIndex);
+                }
             }
         }
     }
